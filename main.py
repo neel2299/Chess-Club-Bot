@@ -4,6 +4,19 @@ from replit import db
 import requests 
 import re
 from webser import webser
+def wrong_user(username):
+  URL="https://api.chess.com/pub/player/"+username+"/stats"
+  r = requests.get(URL) 
+  conten=r.content.decode('utf-8')
+  if conten=='':
+    return 1
+  if 1:
+    pattern = re.compile(r' not found.')
+    matches = pattern.finditer(conten)
+    for match in matches:
+      return 1
+  return 0
+      
 def rating_finder(rat_type,user):
   URL="https://api.chess.com/pub/player/"+user+"/stats"
   r = requests.get(URL) 
@@ -35,12 +48,15 @@ def rating_finder(rat_type,user):
   return '0'
 
 def update_members(username):
+  if(wrong_user(username)==1):
+    return 0
   if "members" in db.keys():
     members = db["members"]
     members.append(username)
     db["members"] = members
   else:
     db["members"] = [username]
+  return 1
 
 
 def delete_members(username):
@@ -89,8 +105,11 @@ async def on_message(message):
     await message.channel.send(out_msg)
   if msg.startswith("$add"):
     username = msg.split("$add ",1)[1]
-    update_members(username)
-    await message.channel.send("New username added.")
+    x=update_members(username)
+    if(x==1):
+      await message.channel.send("New username added.")
+    elif(x==0):
+      await message.channel.send("Check your username.")
   if msg.startswith("$remove"):
     username = msg.split("$remove ",1)[1]
     delete_members(username)
